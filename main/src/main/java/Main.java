@@ -1,19 +1,36 @@
-import config.CsvValueAnnotationConfig;
+import csv.CsvMapper;
 import data.PersonData;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
 
-        PersonData personData = new PersonData();
-        CsvValueAnnotationConfig config = new CsvValueAnnotationConfig();
+        System.out.println("DZ_16\n----------------------------");
+
+        System.out.println("First mapper");
+        ClassLoader classLoader = Main.class.getClassLoader();
+        File file = new File(classLoader.getResource("personDataFile.csv").getFile());
+
+        CsvMapper<PersonData> mapper = new CsvMapper(Paths.get(file.getAbsolutePath()), PersonData.class);
+        List<PersonData> persons = mapper.getListOfInstance();
+        persons.forEach(System.out::println);
+
+        System.out.println("\nSecond mapper");
+        List<String> lines = null;
         try {
-            config.configure(personData);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            lines = Files.readAllLines(Paths.get(file.getAbsolutePath()));
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        System.out.println(personData.);
+        CsvMapper<PersonData> mapper2 = new CsvMapper(lines , PersonData.class);
+        List<PersonData> personsFromMapper2 = mapper2.getListOfInstance();
+        personsFromMapper2.forEach(System.out::println);
+
     }
 }

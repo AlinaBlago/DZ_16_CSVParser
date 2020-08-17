@@ -1,5 +1,6 @@
 package csv;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,6 +57,7 @@ public final class CsvTable {
     }
 
     public static Optional<CsvTable> fromFile(Path path) throws IOException {
+
         var lines = Files.readAllLines(path);
         return fromLines(lines);
     }

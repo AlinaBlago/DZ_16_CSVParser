@@ -1,27 +1,66 @@
 package csv;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import annotation.CsvValue;
+
 import java.io.IOException;
-import java.net.URL;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class CsvMapper {
+public class  CsvMapper<T> {
+    List<T> instances;
 
-    public static Map<Object, Object> getResource(String resource) {
-        URL systemResource = ClassLoader.getSystemResource(resource);
-        String path = systemResource.getPath();
+    public CsvMapper(Path path, Class<T> classType) {
         try {
-            Stream<String> lines = new BufferedReader(new FileReader(path)).lines();
-            return lines.map(line -> line.split("=")).collect(Collectors.toMap(arr -> arr[0], arr -> arr[1]));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("File not found: " + e.getMessage());
+            CsvTable csvTable = CsvTable.fromFile(path).orElseThrow(() -> new RuntimeException("ERROR: EMPTY TABLE"));
+            this.instances = getListOfGenericInstances(classType , csvTable);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
+    public CsvMapper(List<String> lines, Class<T> classType) {
+        CsvTable csvTable = CsvTable.fromLines(lines).orElseThrow(() -> new RuntimeException("ERROR: EMPTY TABLE"));
+        this.instances = getListOfGenericInstances(classType , csvTable);
+    }
+
+    public List<T> getListOfInstance(){
+        return this.instances;
+    }
+
+    private <T> List<T> getListOfGenericInstances(Class<T> typeOfClass, CsvTable table) {
+        try {
+            List<T> instanceList = new ArrayList<>();
+            for (int i = 0; i < table.height(); i++) {
+                T currentObject = typeOfClass.getConstructor().newInstance();
+                for (Field field : typeOfClass.getFields()) {
+                    CsvValue annotation = field.getAnnotation(CsvValue.class);
+                    if (annotation != null) {
+                        Object value;
+                        if(table.getHeaders().contains(annotation.value())) {
+
+                            if (!annotation.value().isEmpty()) {
+                                value = field.getType().getConstructor(String.class).newInstance(table.get(i, annotation.value()));
+                            } else {
+                                value = annotation.value();
+                            }
+                            field.setAccessible(true);
+                            try {
+                                field.set(currentObject, value);
+                            } catch (IllegalAccessException e) {
+                                throw new RuntimeException("Problem with initialization of field: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+                instanceList.add(currentObject);
+            }
+            return instanceList;
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

@@ -5,21 +5,19 @@ import annotation.CsvValue;
 public class PersonData {
 
     @CsvValue("name")
-    String name;
+    public String name;
 
     @CsvValue("age")
-    Integer age;
+    public Integer age;
 
     @CsvValue("gender")
-    String gender;
+    public String gender;
 
     @CsvValue("occupation")
-    String occupation;
+    public String occupation;
 
-//    public PersonData(String name, Integer age, String gender, String occupation) {
-//        this.name = name;
-//        this.age = age;
-//        this.gender = gender;
-//        this.occupation = occupation;
-//    }
+    @Override
+    public String toString() {
+        return "Name: " + name + ", age: " + age + ", gender: " + gender + ", occupation: " + occupation + ".";
+    }
 }
