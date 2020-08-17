@@ -1,0 +1,7 @@
+/data/target/
+/mainModule/target/
+/target/
+DZ_16_CSVParser.iml
+.idea
+# Project exclude paths
+/main/target/
